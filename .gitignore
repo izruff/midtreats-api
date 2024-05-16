@@ -1,1 +1,5 @@
+.env
+
+# Python stuff
+*/__pycache__
 venv
