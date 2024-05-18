@@ -20,7 +20,7 @@ You will need to supply a Django secret key (you may use any secure random strin
 
 You also need to supply PostgreSQL details to access your own database. If you are using Docker, then you may leave them unchanged (only changing the password if necessary). If you are not, then you might want to use a custom database name, and make sure it is already created before proceeding (the build steps do not automatically create the database).
 
-If creating a database does not suit your use case and you only need to utilize the geospatial functions, you may want to use our dedicated [Python package](https://www.github.com/izruff/midtreats-api#python-package) instead.
+If creating a database does not suit your use case and you only need to utilize the geospatial functions, you may want to use our dedicated [Python package](https://www.github.com/izruff/midtreats-api?tab=readme-ov-file#python-package) instead.
 
 ### Using Docker containers
 
@@ -40,7 +40,7 @@ docker compose up -d
 
 Everything should be working out-of-the-box. By default, you can access the API endpoints from `localhost:8000` in your host machine. You can change this by editing the `DJ_ADDRPORT` environment variable.
 
-To make changes, see the [Contributing](https://www.github.com/izruff/midtreats-api#contributing) section.
+To make changes, see the [Contributing](https://www.github.com/izruff/midtreats-api?tab=readme-ov-file#contributing) section.
 
 ### Not using Docker
 
