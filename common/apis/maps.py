@@ -1,4 +1,4 @@
-from . import GOOGLE_MAPS_API_KEY as API_KEY
+from apis import GOOGLE_MAPS_API_KEY as API_KEY
 from googlemaps import Client, exceptions
 
 PLACES_V2_BASE_URL = 'https://places.googleapis.com'
