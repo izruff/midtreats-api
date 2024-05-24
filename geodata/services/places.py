@@ -4,7 +4,6 @@ and session data to allow personalized results.
 """
 
 from common.apis.maps import (
-    MapsClient,
     MAX_RESTRICTION_RADIUS,
     MAX_RESULT_COUNT,
 )
@@ -12,8 +11,6 @@ from common.apis.maps import (
 INITIAL_DISTANCE_THRESHOLD = 1000.0
 DEFAULT_RESULT_PER_PAGE = 20
 DEFAULT_PLACE_FIELDS = tuple()
-
-maps_client = MapsClient()
 
 def _assign_preference_scores(
     place_ids,
