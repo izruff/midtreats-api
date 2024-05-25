@@ -18,18 +18,18 @@ INITIAL_DISTANCE_THRESHOLD = 1000.0
 DEFAULT_RESULT_PER_PAGE = 20
 DEFAULT_PLACE_FIELDS = tuple()
 
-def _assign_preference_scores(
-    place_ids,
+def _get_preference_score(
+    place_id,
     distance_rank=None,
     popularity_rank=None,
 ):
     """
-    Returns a list of scores matching given list of place IDs based
-    on user preference, used for sorting a list of places.
+    Returns score matching given the place ID based on user
+    preference, which is later used for sorting a list of places.
     
-    The scores are normalized to a scale of -1 to 1. A positive
-    score means the user prefers the place, while a negative score
-    means the opposite.
+    The score is normalized to a scale of -1 to 1. A positive score
+    means the user prefers the place, while a negative score means
+    the opposite.
 
     NOTE: currently we are using a very simple preference model
     where each key in the preferences dict is a place type and the
@@ -38,22 +38,25 @@ def _assign_preference_scores(
     the corresponding value is True, it fixes the score to 1 (the
     function returns immediately). Otherwise if False then it fixes
     the score to -1. If no such keys are found, return 0.
-    """
-    current_preference = session['preference']
-    scores = []
 
-    for pid in place_ids:
-        place = get_place_details(pid, fields=['types'])
-        score = 0
-        for type_str in place['types']:
-            v = current_preference.get(type_str, None)
-            if v is not None:
-                score = 1 if v else -1
-                break
-        scores.append(score)
-    
-    return scores
-        
+    We might implement a caching solution if the score is not so fast
+    to compute.
+    """
+    place = get_place_details(place_id, fields=['types'])
+    for type_str in place['types']:
+        v = session.get(type_str, None)
+        if v is not None:
+            return 1 if v else -1
+    return 0
+
+def _get_relevant_fields_for_preference():
+    """
+    Returns a list of fields that are needed to calculate a place's
+    preference score.
+
+    NOTE: see the _assign_preference_scores function.
+    """
+    return ['types']
 
 def get_place_details(place_id, fields=DEFAULT_PLACE_FIELDS):
     """
@@ -67,8 +70,8 @@ def get_place_details(place_id, fields=DEFAULT_PLACE_FIELDS):
 
 def get_nearby_places_sorted(
     location,
-    location_restriction=None,
-    max_result_count=None,
+    max_distance=INITIAL_DISTANCE_THRESHOLD,
+    location_restriction=None
 ):
     """
     Returns a list of places near the given location, sorted by
@@ -81,8 +84,29 @@ def get_nearby_places_sorted(
     Since the Places v2 API can only output at most 20 results per
     request, the function will likewise return a limited number of
     results. For more results, use the get_all_nearby_places function.
+
+    NOTE: we are currently ignoring the location_restriction argument.
     """
-    pass
+    if max_distance > MAX_RESTRICTION_RADIUS:
+        raise ValueError('The max_distance value is too large.')
+
+    relevant_fields = _get_relevant_fields_for_preference()
+    places_sorted_by_distance = maps_client.places_nearby_v2(
+        location,
+        max_distance,
+        fields=relevant_fields,
+        rank_preference='DISTANCE',
+    )['places']
+    places_sorted_by_popularity = maps_client.places_nearby_v2(
+        location,
+        max_distance,
+        fields=relevant_fields,
+        rank_preference='POPULARITY',
+    )['places']
+
+    place_ids = [p['place_id'] for p in places_sorted_by_distance]
+    place_ids.extend(p['place_id'] for p in places_sorted_by_popularity)
+    return sort_places_by_preference(place_ids)
 
 def get_all_nearby_places_sorted(
     location,
@@ -116,14 +140,14 @@ def get_places_in_area_sorted(
     """
     pass
 
-def sort_places_by_preference(place_ids, filter=True):
+def sort_places_by_preference(place_ids, filter_by_preference=True):
     """
-    Sorts (and optionally filters) a list of places by preference.
+    Sorts (and optionally filters) a list of places by preference,
+    then returns a dictionary mapping the sorted places to their
+    respective scores.
     """
-    pass
-
-def filter_places_by_preference(place_ids):
-    """
-    Filters a list of places by preference.
-    """
-    pass
+    sorted_places = sorted(place_ids, key=_get_preference_score)
+    if filter_by_preference:
+        return filter(lambda p: p >= 0, sorted_places)
+    else:
+        return sorted_places
