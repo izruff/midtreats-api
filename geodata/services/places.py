@@ -3,7 +3,7 @@ Services for handling places-related operations, using the Places API
 and session data to allow personalized results.
 """
 
-from common.apis.maps import (
+from ...common.apis.maps import (
     MAX_RESTRICTION_RADIUS,
     MAX_RESULT_COUNT,
 )
