@@ -100,6 +100,31 @@ class MapsClient:
     def __getattr__(self, name):
         """Copies the methods of the client object."""
         return getattr(self.client, name)
+    
+    def place(
+        self,
+        place_id,
+        fields,
+        language_code=None,
+        region_code=None,
+        session_token=None,
+    ):
+        params = {}
+        headers = {
+            'X-Goog-FieldMask': ','.join(fields),
+        }
+        
+        if language_code:
+            params['languageCode'] = language_code
+        if region_code:
+            params['regionCode'] = region_code
+        if session_token:
+            params['sessionToken'] = session_token
+
+        return self.client._request(f'/v1/places/{place_id}', {},  # No GET params
+                                    base_url=PLACES_V2_BASE_URL,
+                                    extract_body=_extract_body,
+                                    requests_kwargs={'headers': headers})
 
     def places_nearby_v2(
         self,
