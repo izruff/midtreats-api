@@ -8,6 +8,12 @@ from common.apis.maps import (
     MAX_RESULT_COUNT,
 )
 
+from services import (
+    maps_client,
+    session_store,
+    session,
+)
+
 INITIAL_DISTANCE_THRESHOLD = 1000.0
 DEFAULT_RESULT_PER_PAGE = 20
 DEFAULT_PLACE_FIELDS = tuple()
@@ -24,15 +30,40 @@ def _assign_preference_scores(
     The scores are normalized to a scale of -1 to 1. A positive
     score means the user prefers the place, while a negative score
     means the opposite.
+
+    NOTE: currently we are using a very simple preference model
+    where each key in the preferences dict is a place type and the
+    value is a boolean. Suppose X is the place referred by the place
+    ID, and there is a key which is also one of the types of X. If
+    the corresponding value is True, it fixes the score to 1 (the
+    function returns immediately). Otherwise if False then it fixes
+    the score to -1. If no such keys are found, return 0.
     """
-    pass
+    current_preference = session['preference']
+    scores = []
+
+    for pid in place_ids:
+        place = get_place_details(pid, fields=['types'])
+        score = 0
+        for type_str in place['types']:
+            v = current_preference.get(type_str, None)
+            if v is not None:
+                score = 1 if v else -1
+                break
+        scores.append(score)
+    
+    return scores
+        
 
 def get_place_details(place_id, fields=DEFAULT_PLACE_FIELDS):
     """
     Returns information corresponding to the fields list about a place
     given its ID.
+
+    NOTE: currently this function calls the API directly; we will use
+    a caching/temporary storage solution later.
     """
-    pass
+    return maps_client.place(place_id, fields)
 
 def get_nearby_places_sorted(
     location,
