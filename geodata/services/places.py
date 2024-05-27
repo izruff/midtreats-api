@@ -8,7 +8,7 @@ from ...common.apis.maps import (
     MAX_RESULT_COUNT,
 )
 
-from services import (
+from . import (
     maps_client,
     session_store,
     session,
@@ -25,7 +25,7 @@ def _get_preference_score(
 ):
     """
     Returns score matching given the place ID based on user
-    preference, which is later used for sorting a list of places.
+    preferences, which is later used for sorting a list of places.
     
     The score is normalized to a scale of -1 to 1. A positive score
     means the user prefers the place, while a negative score means
@@ -44,7 +44,7 @@ def _get_preference_score(
     """
     place = get_place_details(place_id, fields=['types'])
     for type_str in place['types']:
-        v = session.get(type_str, None)
+        v = session['user'].preferences.get(type_str, None)
         if v is not None:
             return 1 if v else -1
     return 0
@@ -75,7 +75,7 @@ def get_nearby_places_sorted(
 ):
     """
     Returns a list of places near the given location, sorted by
-    user preference.
+    user preferences.
     
     The results are combined from two API responses: one is ranked
     by distance and the other by popularity. They are then filtered
@@ -116,7 +116,7 @@ def get_all_nearby_places_sorted(
 ):
     """
     Returns a paginated list of places near the given location and
-    (mostly) sorted by user preference.
+    (mostly) sorted by user preferences.
 
     It works the same way as the get_nearby_places function, but
     uses the old API to obtain more results. As such, the API
@@ -131,7 +131,7 @@ def get_places_in_area_sorted(
 ):
     """
     Returns a paginated list of places in the given area and
-    (mostly) sorted by user preference.
+    (mostly) sorted by user preferences.
 
     The main distinction from get_all_nearby_places_sorted is that
     the distance to a particular center is no longer a factor in
